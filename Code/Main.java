@@ -5,32 +5,47 @@ public class Main {
 
     static HashSet<String> passwordHash = new HashSet<>();
     static HashMap<Integer, Long> lineCount = new HashMap<>();
-    static HashMap<Integer, BufferedWriter> indexWriters = new HashMap<>();
+    static HashMap<String, BufferedWriter> indexWriters = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
+        createFolder("Index");
+        createFolder("Processed");
+
         File file = createFile("Processed/passwords.txt");
         BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
 
-        String line;
-        Scanner scanner = new Scanner(System.in);
-
         passwordHash = new HashSet<>(bufferedReader.lines().toList());
 
-        List<String> filesName = textFiles("Unprocessed-Passwords");
+        List<String> indexFolders = textFiles("Index");
+        for (String folder : indexFolders) {
+            List<String> indexFiles = textFiles("Index/" + folder);
+            for (String iFile : indexFiles) {
+                int letter = Integer.parseInt(iFile);
+                lineCount.put(letter, lineCount.getOrDefault(letter, 0L) + calculateLineNumber(iFile));
+            }
+        }
 
+        List<String> filesName = textFiles("Unprocessed-Passwords");
         for (String fileName : filesName) {
             BufferedReader br = new BufferedReader(new FileReader("Unprocessed-Passwords/" + fileName));
+
+            String line;
             while ((line = br.readLine()) != null) {
                 int letter = line.charAt(0);
-                createFile("Index/" + letter + "/passwords.txt");
-                if (!passwordHash.contains(line)) {
-                    passwordHash.add(line);
+                int fileNum = (int) (lineCount.getOrDefault(letter, 0L) / 10000);
+                createFile("Index/" + letter + "/" + fileNum + ".txt");
+                if (passwordHash.add(line)) {
+                    lineCount.put(letter, lineCount.getOrDefault(letter, 0L) + 1);
                     appendToFile(line, bufferedWriter);
-                    appendToFile(new Password(line).toString(), letter);
+                    appendToFile(new Password(line).toString(), letter, fileNum);
                 }
             }
         }
+
+
+        Scanner scanner = new Scanner(System.in);
+
     }
 
     public static File createFile(String... path) throws Exception {
@@ -65,29 +80,21 @@ public class Main {
     }
 
     public static List<String> textIndexFiles(String directory) {
-        List<String> textFiless = new ArrayList<>();
+        List<String> textFile = new ArrayList<>();
         File dir = new File(directory);
         for (File file : Objects.requireNonNull(dir.listFiles())) {
-            textFiless.add(file.getName());
+            textFile.add(file.getName());
         }
-        return textFiless;
+        return textFile;
     }
 
 
-    public static void appendToFile(String content, int letter) throws IOException {
-        if (!indexWriters.containsKey(letter)) {
-            File indexFile = new File("Index/" + letter + "/passwords.txt");
-            indexWriters.put(letter, new BufferedWriter(new FileWriter(indexFile)));
+    public static void appendToFile(String content, int letter, int fileNum) throws IOException {
+        if (!indexWriters.containsKey(letter + "|" + fileNum)) {
+            File indexFile = new File("Index/" + letter + "/" + fileNum + ".txt");
+            indexWriters.put(letter + "|" + fileNum, new BufferedWriter(new FileWriter(indexFile)));
         }
-        appendToFile(content, indexWriters.get(letter));
-    }
-
-    public static void appendToFile(String content, int letter, int lineCount) throws IOException {
-        if (!indexWriters.containsKey(letter)) {
-            File indexFile = new File("Index/" + letter + "/" + lineCount + ".txt");
-            indexWriters.put(letter, new BufferedWriter(new FileWriter(indexFile)));
-        }
-        appendToFile(content, indexWriters.get(letter));
+        appendToFile(content, indexWriters.get(letter + "|" + fileNum));
     }
 
     public static void appendToFile(String content, BufferedWriter bufferedWriter) throws IOException {
@@ -105,6 +112,4 @@ public class Main {
             throw new RuntimeException(e);
         }
     }
-
-
 }
