@@ -2,71 +2,35 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
+
+    static HashSet<String> passwordHash = new HashSet<>();
+    static HashMap<Integer, Long> lineCount = new HashMap<>();
+    static HashMap<Integer, BufferedWriter> indexWriters = new HashMap<>();
+
     public static void main(String[] args) throws Exception {
+        File file = createFile("Processed/passwords.txt");
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
 
-        createFolder("Index");
-        createFolder("Unprocessed-Passwords");
-        createFolder("Processed");
-        createFile("Processed/passwords.txt");
-
-        HashSet<String> passwordHash = new HashSet<>();
-        List<String> filesName = textFiles("Unprocessed-Passwords");
         String line;
-        HashMap<Integer, BufferedReader> passwordMap = new HashMap<>();
         Scanner scanner = new Scanner(System.in);
 
+        passwordHash = new HashSet<>(bufferedReader.lines().toList());
 
-            BufferedReader br = new BufferedReader(new FileReader("Processed/passwords.txt"));
-            while((line=br.readLine())!=null){
-                int letter = line.charAt(0);
-                BufferedReader bufferedReader = new BufferedReader(new FileReader("Index/"+letter));
-                passwordMap.put(letter,bufferedReader);
-            }
+        List<String> filesName = textFiles("Unprocessed-Passwords");
 
-            System.out.println("Please enter the password what you want to search");
-            String searchPassword = scanner.nextLine();
-
-            int key = searchPassword.charAt(0);
-            BufferedReader brs = passwordMap.get(key);
-
-            while((line=brs.readLine()).equals(searchPassword)){
-
-            }
-        /*
-        ----this loop for write on Processed folder----
         for (String fileName : filesName) {
             BufferedReader br = new BufferedReader(new FileReader("Unprocessed-Passwords/" + fileName));
             while ((line = br.readLine()) != null) {
+                int letter = line.charAt(0);
+                createFile("Index/" + letter + "/passwords.txt");
                 if (!passwordHash.contains(line)) {
                     passwordHash.add(line);
-                    appendToFile("Processed/passwords.txt", line);
+                    appendToFile(line, bufferedWriter);
+                    appendToFile(new Password(line).toString(), letter);
                 }
-                System.out.println("King Hakan");
             }
         }
-
-
-        ----this loop for create Index Folder----
-        for(String fileName:filesName){
-            BufferedReader br = new BufferedReader(new FileReader("Unprocessed-Passwords/"+fileName));
-            while((line=br.readLine())!=null){
-                int letter = line.charAt(0);
-                String folderName = "Index/" + letter;
-                createFolder(folderName);
-                createFile(folderName+"/passwords.txt");
-            }
-        }
-
-        Password password = new Password("");
-        BufferedReader br = new BufferedReader(new FileReader("Processed/passwords.txt"));
-        while((line=br.readLine())!=null){
-            password.setPassword(line);
-            int letter = line.charAt(0);
-            String pathFile = "Index/"+letter+"/passwords.txt";
-            appendToFile(pathFile,password.toString());
-        }
-        */
-
     }
 
     public static File createFile(String... path) throws Exception {
@@ -90,7 +54,7 @@ public class Main {
     }
 
     public static List<String> textFiles(String directory) {
-        List<String> textFiles = new ArrayList<String>();
+        List<String> textFiles = new ArrayList<>();
         File dir = new File(directory);
         for (File file : Objects.requireNonNull(dir.listFiles())) {
             if (file.getName().endsWith((".txt"))) {
@@ -100,11 +64,46 @@ public class Main {
         return textFiles;
     }
 
-    public static void appendToFile(String filePath, String content) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
-        writer.append(content);
-        writer.newLine();
-        writer.close();
+    public static List<String> textIndexFiles(String directory) {
+        List<String> textFiless = new ArrayList<>();
+        File dir = new File(directory);
+        for (File file : Objects.requireNonNull(dir.listFiles())) {
+            textFiless.add(file.getName());
+        }
+        return textFiless;
+    }
+
+
+    public static void appendToFile(String content, int letter) throws IOException {
+        if (!indexWriters.containsKey(letter)) {
+            File indexFile = new File("Index/" + letter + "/passwords.txt");
+            indexWriters.put(letter, new BufferedWriter(new FileWriter(indexFile)));
+        }
+        appendToFile(content, indexWriters.get(letter));
+    }
+
+    public static void appendToFile(String content, int letter, int lineCount) throws IOException {
+        if (!indexWriters.containsKey(letter)) {
+            File indexFile = new File("Index/" + letter + "/" + lineCount + ".txt");
+            indexWriters.put(letter, new BufferedWriter(new FileWriter(indexFile)));
+        }
+        appendToFile(content, indexWriters.get(letter));
+    }
+
+    public static void appendToFile(String content, BufferedWriter bufferedWriter) throws IOException {
+        bufferedWriter.append(content);
+        bufferedWriter.newLine();
+        bufferedWriter.flush();
+    }
+
+
+    public static long calculateLineNumber(String fileName) {
+        try (LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(fileName))) {
+            lineNumberReader.skip(Long.MAX_VALUE);
+            return lineNumberReader.getLineNumber();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
