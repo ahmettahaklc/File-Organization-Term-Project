@@ -5,9 +5,11 @@ import java.security.NoSuchAlgorithmException;
 public class Password {
 
     private String password;
+    private String sourceFileName;
 
-    public Password(String password) {
+    public Password(String password,String sourceFileName) {
         this.password = password;
+        this.sourceFileName = sourceFileName;
     }
 
     public String getPassword() {
@@ -67,6 +69,6 @@ public class Password {
     }
 
     public String toString(){
-        return this.password+"|"+this.generateMD5()+"|"+this.generateSHA1()+"|"+this.generateSHA256();
+        return this.password+"|"+this.generateMD5()+"|"+this.generateSHA1()+"|"+this.generateSHA256()+"|"+this.sourceFileName;
     }
 }
