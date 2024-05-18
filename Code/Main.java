@@ -54,7 +54,7 @@ public class Main {
 
         ArrayList<String> arrayList = new ArrayList<>(passwordHash);
 
-        System.out.println("Please enter password");
+        System.out.println("Please enter password!\nIf index file does not contain entered password,this password will be saved in index file");
         Scanner scanner = new Scanner(System.in);
         String answer = scanner.nextLine();
 
