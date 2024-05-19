@@ -72,7 +72,7 @@ public class Main {
             searchAlgorithm(pass);
             totalTime += System.nanoTime()-now;
         }
-        System.out.println(totalTime/1000000.0/1000);
+        System.out.println("Average Seek Time: "+totalTime/1000000.0/1000);
     }
 
     public static File createFile(String... path) throws Exception {
