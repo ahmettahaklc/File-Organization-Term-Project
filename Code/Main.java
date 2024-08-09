@@ -33,7 +33,6 @@ public class Main {
             }
         }
 
-
         List<String> filesName = textFiles("Unprocessed-Passwords");
 
         for (String fileName : filesName) {
